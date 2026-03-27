@@ -1,6 +1,6 @@
 {
   "name": "日本国憲法 電光掲示板",
-  "short_name": "憲法電飾",
+  "short_name": "憲法電光掲示板",
   "description": "日本国憲法の条文を電光掲示板風にスクロール表示するアプリ",
   "start_url": "./index.html",
   "display": "standalone",
