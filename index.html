@@ -341,7 +341,8 @@ if ('serviceWorker' in navigator) {
     will-change: transform;
   }
   #player.vertical .seg {
-    transform: none;
+    transform: scaleY(0.9);
+    transform-origin: center top;
     display: inline;
   }
 
@@ -705,9 +706,11 @@ function startScroll(texts, fontSize, speed, colors, vertical) {
     rafId = requestAnimationFrame(tick);
   };
 
-  document.fonts.ready.then(() => {
+  // 計測・配置を関数化（resize時にも呼ぶ）
+  function recalcLayout() {
     const segs = runner.querySelectorAll('.seg');
     const half = segs.length / 2;
+    const oldTotalW = totalW;
     totalW = 0;
     segEdges = [];
     for (let i = 0; i < half; i++) {
@@ -715,15 +718,18 @@ function startScroll(texts, fontSize, speed, colors, vertical) {
       totalW += isVertical ? segs[i].offsetHeight : segs[i].offsetWidth;
     }
 
+    // スクロール位置を新しいtotalWに比例補正
+    if (oldTotalW > 0 && totalW > 0) {
+      posX = posX * (totalW / oldTotalW);
+    }
+
     // 縦書き時：条文番号をボード右、ボタンをボード左に配置
     if (isVertical) {
       const boardRect = board.getBoundingClientRect();
       const rightOfBoard = boardRect.right + 10;
       const leftOfBoard = boardRect.left;
-      // 条文番号：ボードのすぐ右
       boardTitle.style.left = rightOfBoard + 'px';
       boardTitle.style.top = '10px';
-      // 「設定に戻る」：ボードの左端から間隔を空けて右端を合わせる
       const btnBack = document.getElementById('btnBack');
       btnBack.textContent = '↓ 設定に戻る';
       const gap = 10;
@@ -731,13 +737,11 @@ function startScroll(texts, fontSize, speed, colors, vertical) {
       btnBack.style.left = '';
       btnBack.style.right = rightPos + 'px';
       btnBack.style.top = '10px';
-      // 「⏸」：「設定に戻る」のすぐ下（0.3字分の間隔）
       btnPause.style.left = '';
       btnPause.style.right = rightPos + 'px';
       const btnBackRect = btnBack.getBoundingClientRect();
       btnPause.style.top = (btnBackRect.bottom + 4) + 'px';
     } else {
-      // 横書き時：デフォルト位置に戻す
       boardTitle.style.left = '';
       document.getElementById('btnBack').style.left = '';
       document.getElementById('btnBack').style.right = '10px';
@@ -746,7 +750,19 @@ function startScroll(texts, fontSize, speed, colors, vertical) {
       btnPause.style.right = '130px';
       btnPause.style.top = '10px';
     }
+  }
 
+  // resize対応（画面回転時に再計測）
+  let resizeTimer = null;
+  function onResize() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(recalcLayout, 150);
+  }
+  window.removeEventListener('resize', onResize);
+  window.addEventListener('resize', onResize);
+
+  document.fonts.ready.then(() => {
+    recalcLayout();
     rafId = requestAnimationFrame(tickFn);
   });
 }
