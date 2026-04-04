@@ -622,6 +622,20 @@ document.getElementById('btnRun').addEventListener('click', () => {
   }
   selected.push(...ARTICLES.filter(a => checked.includes(a.id)));
   saveSettings();
+
+  // --- Analytics: スクロール実行イベント ---
+  const articleLabels = ARTICLES.filter(a => checked.includes(a.id)).map(a => a.label).join(',');
+  gtag('event', 'start_scroll', {
+    articles: articleLabels.slice(0, 100),
+    article_count: checked.length
+  });
+  if (freeText1 !== '') {
+    gtag('event', 'free_message', { message_text: freeText1.slice(0, 100) });
+  }
+  if (freeText2 !== '') {
+    gtag('event', 'free_message', { message_text: freeText2.slice(0, 100) });
+  }
+
   startScroll(selected, fontSize, speed, colors, vertical);
 });
 
